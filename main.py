@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QHBoxLayout, QVBo
 from src.models import Datamodel, ChannelList
 from ui.graphwidget import GraphCtrl
 from ui.chanlist_widget import ChannelListCtrl
+from ui.graphlist_widget import GraphlistView
 
 
 class MainTestWindow(QMainWindow):
@@ -14,7 +15,7 @@ class MainTestWindow(QMainWindow):
         # formula
 
         # VIEWS
-        # graphlist
+        self.graphlistview = GraphlistView()
         # is in GraphCtrl2
         # is in ChannelListCtrl
         # add formula
@@ -22,6 +23,8 @@ class MainTestWindow(QMainWindow):
         # CONTROLLERS
         # graphlist
         self.graphctrl = GraphCtrl(self.data, self.channels)
+        self.graphctrl.set_modifier(self.graphlistview)
+
         self.chanlistctrl = ChannelListCtrl(self.channels)
         # add formula
 
@@ -36,6 +39,7 @@ class MainTestWindow(QMainWindow):
         self.horzlayout = QHBoxLayout(self.central)
         self.vertlayout = QVBoxLayout(self.central)
         self.vertlayout.addWidget(self.chanlistctrl.view)
+        self.vertlayout.addWidget(self.graphlistview)
         self.vertlayout.addWidget(self.btn)
 
         self.horzlayout.addLayout(self.vertlayout)

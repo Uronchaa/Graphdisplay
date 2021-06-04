@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5 import QtGui
 from PyQt5 import QtCore
+from src.models import ChannelList
 from warnings import warn
 
 
@@ -15,11 +16,20 @@ class GraphlistView(QListWidget):
 
         self.itemDoubleClicked.connect(self._handleDoubleClick)
 
-    def setdata(self, list):
+    def setdata(self, lst):
+        warn("setdata is deprecated, use set_channels")
         self.clear()
-        for item in list:
+        for item in lst:
             i = QListWidgetItem(str(item))
             self.addItem(i)
+
+    def set_channels(self, chans: ChannelList):
+        self.clear()
+        for name, status in chans.get_data():
+            if status:
+                i = QListWidgetItem(name)
+                i.setBackground(self._green)
+                self.addItem(i)
 
     def get_list_status(self):
         out = []
@@ -28,7 +38,7 @@ class GraphlistView(QListWidget):
             if i.background() == self._green:
                 meta["visible"] = True
             else:
-                meta["visible"] = True
+                meta["visible"] = False
             out.append(meta)
         return out
 

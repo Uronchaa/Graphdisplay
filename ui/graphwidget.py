@@ -1,4 +1,5 @@
 import pyqtgraph as pg
+from PyQt5.QtWidgets import QWidget
 
 
 class GraphWgt(pg.GraphicsLayoutWidget):
@@ -38,6 +39,8 @@ class GraphCtrl:
 
         self._graphdata = []
 
+        self._mod = set()
+
     def handle_event(self, event, sender):
         print("received notification")
         self._graphdata = []
@@ -49,11 +52,17 @@ class GraphCtrl:
                 self._graphdata.append((data, {"name": name}))
 
         self.update_graph()
+        self._mod.set_channels(self.channel)
 
     def process_view_event(self):
-        pass
+        print(self._mod.get_list_status())
 
     def update_graph(self):
         self.view.clear_plot()
         for values, meta in self._graphdata:
             self.view.add_curve(None, values, **meta)
+
+    def set_modifier(self, widget:QWidget):
+        self._mod = widget
+        self._mod.updated.connect(self.process_view_event)
+        widget.set_channels(self.channel)
