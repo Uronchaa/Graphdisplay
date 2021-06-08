@@ -39,47 +39,40 @@ class GraphCtrl:
         self.data.attach(self)
 
         self.metadata = Metadata(self.channel.get_channels(active_only=True))
-        print(self.metadata.get_all())
+        # print(self.metadata.get_all())
 
     def handle_event(self, event, sender):
         print("received notification")
         self._graphdata = []
         value_data = self.data.get_values()
-        meta_data = self.channel.get_data()
 
         for chan in self.channel.get_channels(active_only=True):
             self.metadata.add_dataset(chan)
-        print(self.metadata.get_all())
-
-        # for data, meta in zip(value_data, meta_data):
-        #     name, status = meta
-        #     if status:
-        #         self._graphdata.append((data, {"name": name}))
+        # print(self.metadata.get_all())
 
         for data, chan in zip(value_data, self.channel.get_channels()):
             if chan.status:
                 self._graphdata.append((data, self.metadata.get_metadata(chan)))
 
         self.update_graph()
-        # self._mod.set_channels(self.channel)
-        meta = [self.metadata.get_metadata(chan)for chan in self.channel.get_channels(active_only=True)]
+        meta = [self.metadata.get_metadata(chan) for chan in self.channel.get_channels(active_only=True)]
         self._mod.set_data(meta)
 
     def process_view_event(self):
         for chan, data in zip(self.channel.get_channels(active_only=True), self._mod.get_list_status()):
             self.metadata.update_metadata(chan, data)
-        print(self.metadata.get_all())
+        # print(self.metadata.get_all())
 
         self.update_graph()
 
     def update_graph(self):
         self.view.clear_plot()
-        # for val, chan in zip(self.)
+
         for values, meta in self._graphdata:
             if meta["visible"]:
                 self.view.add_curve(None, values, **meta)
 
-    def set_modifier(self, widget:QWidget):
+    def set_modifier(self, widget: QWidget):
         self._mod = widget
         self._mod.updated.connect(self.process_view_event)
         meta = [self.metadata.get_metadata(chan) for chan in self.channel.get_channels(active_only=True)]

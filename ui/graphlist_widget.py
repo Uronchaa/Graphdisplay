@@ -3,8 +3,6 @@ from typing import List
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from src.models import ChannelList
-from warnings import warn
 from pyqtgraph import intColor
 
 
@@ -19,22 +17,6 @@ class GraphlistView(QListWidget):
         self._white = QtGui.QBrush(QtCore.Qt.white)
 
         self.itemDoubleClicked.connect(self._handleDoubleClick)
-
-    def setdata(self, lst):
-        warn("setdata is deprecated, use set_data", DeprecationWarning)
-        self.clear()
-        for item in lst:
-            i = QListWidgetItem(str(item))
-            self.addItem(i)
-
-    def set_channels(self, chans: ChannelList):
-        warn("set_channels is deprecated, use set_data", DeprecationWarning)
-        self.clear()
-        for name, status in chans.get_data():
-            if status:
-                i = QListWidgetItem(name)
-                i.setBackground(self._green)
-                self.addItem(i)
 
     def set_data(self, meta_list: List[dict]):
         self.clear()
@@ -70,21 +52,6 @@ class GraphlistView(QListWidget):
     def iterAllItems(self):
         for i in range(self.count()):
             yield self.item(i)
-
-
-class GraphlistCtrl:
-    def __init__(self):
-        warn("GraphlistCtrl is deprecated", DeprecationWarning)
-        self.view = GraphlistView()
-
-        self.view.updated.connect(self._handleviewupdated)
-
-    def update_data(self, list):
-        self.view.clear()
-        self.view.setdata(list)
-
-    def _handleviewupdated(self):
-        print(self.view.get_list_status())
 
 
 if __name__ == "__main__":
