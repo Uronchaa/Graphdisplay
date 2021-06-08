@@ -1,8 +1,11 @@
+from typing import List
+
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from src.models import ChannelList
 from warnings import warn
+from pyqtgraph import intColor
 
 
 class GraphlistView(QListWidget):
@@ -11,19 +14,21 @@ class GraphlistView(QListWidget):
     def __init__(self, parent=None):
         super(GraphlistView, self).__init__(parent)
 
-        self._red = QtGui.QBrush(QtCore.Qt.red)
-        self._green = QtGui.QBrush(QtCore.Qt.green)
+        self._data = []
+
+        self._white = QtGui.QBrush(QtCore.Qt.white)
 
         self.itemDoubleClicked.connect(self._handleDoubleClick)
 
     def setdata(self, lst):
-        warn("setdata is deprecated, use set_channels")
+        warn("setdata is deprecated, use set_data", DeprecationWarning)
         self.clear()
         for item in lst:
             i = QListWidgetItem(str(item))
             self.addItem(i)
 
     def set_channels(self, chans: ChannelList):
+        warn("set_channels is deprecated, use set_data", DeprecationWarning)
         self.clear()
         for name, status in chans.get_data():
             if status:
@@ -31,22 +36,36 @@ class GraphlistView(QListWidget):
                 i.setBackground(self._green)
                 self.addItem(i)
 
+    def set_data(self, meta_list: List[dict]):
+        self.clear()
+        self._data = list(meta_list)
+        for item in self._data:
+            i = QListWidgetItem(item["name"])
+            if item["visible"]:
+                i.setBackground(intColor(item["color_code"]))
+            else:
+                i.setBackground(self._white)
+            self.addItem(i)
+
     def get_list_status(self):
         out = []
         for i in self.iterAllItems():
             meta = {"name": i.text()}
-            if i.background() == self._green:
-                meta["visible"] = True
-            else:
+            if i.background() == self._white:
                 meta["visible"] = False
+            else:
+                meta["visible"] = True
             out.append(meta)
         return out
 
     def _handleDoubleClick(self, item: QListWidgetItem):
-        color = item.background()
-        item.setBackground(self._red if color == self._green else self._green)
+        bg_color = item.background()
+        i = self.currentRow()
+
+        item.setBackground(intColor(self._data[i]["color_code"]) if bg_color == self._white else self._white)
         item.setSelected(False)
         self.updated.emit()
+        print(self.get_list_status())
 
     def iterAllItems(self):
         for i in range(self.count()):
@@ -54,9 +73,8 @@ class GraphlistView(QListWidget):
 
 
 class GraphlistCtrl:
-    warn("GraphlistCtrl is deprecated", DeprecationWarning)
-
     def __init__(self):
+        warn("GraphlistCtrl is deprecated", DeprecationWarning)
         self.view = GraphlistView()
 
         self.view.updated.connect(self._handleviewupdated)
@@ -75,8 +93,10 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    names = ["poi", "oiupo", "opyiopyh"]
+    data = [{"name": "poi", "visible": False, "color_code": 0},
+            {"name": "oiupo", "visible": False, "color_code": 1},
+            {"name": "opyiopyh", "visible": False, "color_code": 2}]
     m = GraphlistView()
-    m.setdata(names)
+    m.set_data(data)
     m.show()
     sys.exit(app.exec_())
