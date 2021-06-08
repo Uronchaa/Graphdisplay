@@ -1,5 +1,6 @@
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QWidget
+from src.metadata import Metadata
 
 
 class GraphWgt(pg.GraphicsLayoutWidget):
@@ -13,7 +14,7 @@ class GraphWgt(pg.GraphicsLayoutWidget):
 
     def add_curve(self, x, y, **metadata):
         if x is None:
-            self._c.append(self._plt.plot(y, **metadata))
+            self._c.append(self._plt.plot(y, pen=pg.intColor(metadata["color_code"]), **metadata))
         else:
             self._c.append(self._plt.plot(x, y, **metadata))
 
@@ -37,32 +38,49 @@ class GraphCtrl:
         self.data = data
         self.data.attach(self)
 
-        self._graphdata = []
-
-        self._mod = set()
+        self.metadata = Metadata(self.channel.get_channels(active_only=True))
+        print(self.metadata.get_all())
 
     def handle_event(self, event, sender):
         print("received notification")
         self._graphdata = []
         value_data = self.data.get_values()
         meta_data = self.channel.get_data()
-        for data, meta in zip(value_data, meta_data):
-            name, status = meta
-            if status:
-                self._graphdata.append((data, {"name": name}))
+
+        for chan in self.channel.get_channels(active_only=True):
+            self.metadata.add_dataset(chan)
+        print(self.metadata.get_all())
+
+        # for data, meta in zip(value_data, meta_data):
+        #     name, status = meta
+        #     if status:
+        #         self._graphdata.append((data, {"name": name}))
+
+        for data, chan in zip(value_data, self.channel.get_channels()):
+            if chan.status:
+                self._graphdata.append((data, self.metadata.get_metadata(chan)))
 
         self.update_graph()
-        self._mod.set_channels(self.channel)
+        # self._mod.set_channels(self.channel)
+        meta = [self.metadata.get_metadata(chan)for chan in self.channel.get_channels(active_only=True)]
+        self._mod.set_data(meta)
 
     def process_view_event(self):
-        print(self._mod.get_list_status())
+        for chan, data in zip(self.channel.get_channels(active_only=True), self._mod.get_list_status()):
+            self.metadata.update_metadata(chan, data)
+        print(self.metadata.get_all())
+
+        self.update_graph()
 
     def update_graph(self):
         self.view.clear_plot()
+        # for val, chan in zip(self.)
         for values, meta in self._graphdata:
-            self.view.add_curve(None, values, **meta)
+            if meta["visible"]:
+                self.view.add_curve(None, values, **meta)
 
     def set_modifier(self, widget:QWidget):
         self._mod = widget
         self._mod.updated.connect(self.process_view_event)
-        widget.set_channels(self.channel)
+        meta = [self.metadata.get_metadata(chan) for chan in self.channel.get_channels(active_only=True)]
+        self._mod.set_data(meta)
