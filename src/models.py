@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from src.observers import Observed, Event
 
@@ -11,11 +13,11 @@ class Channel:
 class ChannelList(Observed):
     def __init__(self):
         super(ChannelList, self).__init__()
-        self.list = [Channel("chan" + str(i)) for i in range(8)]
+        self._list = [Channel("chan" + str(i)) for i in range(8)]
 
     def update_channel(self, i, name, status):
-        self.list[i].name = str(name)
-        self.list[i].status = bool(status)
+        self._list[i].name = str(name)
+        self._list[i].status = bool(status)
 
     def update_all(self, data):
         for idx, datum in enumerate(data):
@@ -25,9 +27,15 @@ class ChannelList(Observed):
 
     def get_data(self):
         out = []
-        for item in self.list:
+        for item in self._list:
             out.append((str(item.name), bool(item.status)))
         return out
+
+    def get_channels(self, active_only=False) -> List[Channel]:
+        if active_only:
+            return [chan for chan in self._list if chan.status]
+        else:
+            return list(self._list)
 
 
 class Datamodel(Observed):
